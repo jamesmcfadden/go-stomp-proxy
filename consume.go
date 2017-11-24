@@ -41,6 +41,8 @@ func main() {
 		return
 	}
 
+	defer conn.Disconnect()
+
 	sub, err := conn.Subscribe(*queue, stomp.AckClientIndividual)
 	if err != nil {
 		fmt.Println("Unable to subscribe to", queue, err.Error())
@@ -63,10 +65,14 @@ func main() {
 	}
 
 	fmt.Println("Message limit hit. Finishing up.")
+
+	sub.Unsubscribe()
 }
 
 func handleMessage(msg *stomp.Message) error {
 	args := strings.Split(*command, " ")
+	args = append(args, string(msg.Body))
+
 	cmd := exec.Command(args[0], args[1:]...)
 
 	if err := cmd.Start(); err != nil {
